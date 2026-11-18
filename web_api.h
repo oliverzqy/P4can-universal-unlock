@@ -1611,11 +1611,7 @@ static String wifiApActiveSsid;
 static String wifiApActivePassword;
 
 static void wifiApBuildDefaultSsid(String &ssid) {
-  uint8_t mac[6] = {0};
-  WiFi.softAPmacAddress(mac);
-  char buf[24];
-  snprintf(buf, sizeof(buf), "P4-CAN-%02X%02X", mac[4], mac[5]);
-  ssid = buf;
+  ssid = "p4canC";
 }
 
 static bool wifiApTextHasControl(const String &v) {
@@ -1644,7 +1640,7 @@ static bool wifiApConfigValid(const String &ssid, const String &password, String
 
 static void wifiApLoadConfig(String &ssid, String &password) {
   wifiApBuildDefaultSsid(ssid);
-  password = "12345678";
+  password = "zhou950221";
   Preferences p;
   if (p.begin("wifiap", true)) {
     const String storedSsid = p.getString("ssid", "");
@@ -1688,7 +1684,7 @@ static bool wifiApActivate(const String &requestedSsid, const String &requestedP
 
   String fallbackSsid;
   wifiApBuildDefaultSsid(fallbackSsid);
-  const String fallbackPassword = "12345678";
+  const String fallbackPassword = "zhou950221";
   P4CAN_SERIAL_PRINTLN("WiFi: custom AP failed; restoring fail-safe default AP");
   if (!wifiApStartOnce(fallbackSsid, fallbackPassword)) return false;
   // A transient connection failure must not overwrite saved credentials.

@@ -39,7 +39,10 @@ jobs:
       - name: Regenerate embedded dashboard header & run host checks
         run: |
           python3 tools/build_dashboard.py
+          python3 tests/test_dashboard.py
           node tests/test_dashboard.js
+          node tests/test_tlssc_offline_lab.js
+          python3 tests/test_offline_preview.py
           python3 tests/test_p4_tinycrypt_host.py
           python3 tests/test_p4_crypto_lifecycle.py
           python3 tests/test_p4_crypto_link.py

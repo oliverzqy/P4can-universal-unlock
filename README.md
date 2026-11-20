@@ -35,6 +35,28 @@ Multiple operating modes supporting five vehicle profiles Model 3/Y/YL :
 
 ## Build
 
+### 本地离线实验室预览
+
+在电脑上运行 `python3 tools/preview_offline_lab.py`，打开
+`http://127.0.0.1:8765`，进入 **实验室 → TLSSC 离线模拟**。
+模拟开关默认关闭，可逐步运行、暂停、重置并查看带时间戳的日志。
+刷新页面会清除模拟状态，离开面板会暂停。
+
+本地预览使用合成数据，不连接板子、车辆或 CAN 设备；模拟名称和状态不代表
+真实车辆功能已经恢复。预览服务只绑定本机地址，拒绝所有写入请求，也不会
+转发请求。离线模拟入口仅在本地文件或 HTTP 本机地址下显示。
+
+本地检查：
+
+```sh
+node tests/test_tlssc_offline_lab.js
+python3 tests/test_offline_preview.py
+python3 tests/test_dashboard.py
+node tests/test_dashboard.js
+```
+
+修改仪表盘后运行 `python3 tools/build_dashboard.py` 更新内嵌网页。
+
 Use Arduino-ESP32 3.3.12 with `ESP32P4 Dev Module`, post-v3 silicon, 32 MB flash, `app5M_fat24M_32MB`, enabled PSRAM, Hardware CDC/JTAG and CDC on boot:
 
 ```text

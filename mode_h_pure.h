@@ -15,8 +15,8 @@ static constexpr uint16_t MODE_H_BASE_RAW_MAX = 0x0FFFu;
 // production Rev.1 Plus default is 1.50–2.20 Nm.
 static constexpr uint16_t MODE_H_BASE_PEAK_ALLOWED_MIN_RAW = 100u; // 1.00 Nm
 static constexpr uint16_t MODE_H_BASE_PEAK_ALLOWED_MAX_RAW = 300u; // 3.00 Nm
-static constexpr uint16_t MODE_H_BASE_PEAK_DEFAULT_MIN_RAW = 150u; // Rev.1 Plus 1.50 Nm
-static constexpr uint16_t MODE_H_BASE_PEAK_DEFAULT_MAX_RAW = 220u; // Rev.1 Plus 2.20 Nm
+static constexpr uint16_t MODE_H_BASE_PEAK_DEFAULT_MIN_RAW = 120u; // Rev.1 Plus 1.50 Nm
+static constexpr uint16_t MODE_H_BASE_PEAK_DEFAULT_MAX_RAW = 180u; // Rev.1 Plus 2.20 Nm
 static constexpr uint16_t MODE_H_BASE_WAIT_ALLOWED_MIN_MS = 300u;
 static constexpr uint16_t MODE_H_BASE_WAIT_ALLOWED_MAX_MS = 5000u;
 static constexpr uint16_t MODE_H_BASE_REFRACTORY_ALLOWED_MIN_MS = 300u;
@@ -483,8 +483,8 @@ static inline ModeHConfigPure modeHDefaultConfigPure() {
   // Preserve the established Human Interaction ramp/interact/correction shape,
   // but Rev.4 owns its primary envelope and cadence.
   c.base = modeHBaseRev1PlusConfigPure();
-  c.base.peakMinRaw = 180u;              // 1.80 Nm
-  c.base.peakMaxRaw = 260u;              // 2.60 Nm
+  c.base.peakMinRaw = 120u;              // 1.80 Nm
+  c.base.peakMaxRaw = 180u;              // 2.60 Nm
   c.base.waitMinMs = 900u;               // 0.90 s
   c.base.waitMaxMs = 3000u;              // 3.00 s
   c.base.refractoryMinMs = 500u;         // 0.50 s
@@ -495,7 +495,7 @@ static inline ModeHConfigPure modeHDefaultConfigPure() {
   c.carrierMaxRaw = 60u;                 // 0.60 Nm
   c.hoPolicy = MH_HO_TIERED_1_2;
   c.ho1ThresholdRaw = 40u;               // 0.40 Nm
-  c.ho2ThresholdRaw = 200u;              // 2.00 Nm
+  c.ho2ThresholdRaw = 160u;              // 2.00 Nm
   c.visualRescueEnabled = true;
   c.visualRescueDelayMs = 500u;
   return c;

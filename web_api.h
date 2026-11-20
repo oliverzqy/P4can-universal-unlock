@@ -2184,11 +2184,6 @@ static String wifiApActivePassword;
 
 static void wifiApBuildDefaultSsid(String &ssid) {
   ssid = "p4canC";
-};
-  WiFi.softAPmacAddress(mac);
-  char buf[24];
-  snprintf(buf, sizeof(buf), "P4-CAN-%02X%02X", mac[4], mac[5]);
-  ssid = buf;
 }
 
 static bool wifiApTextHasControl(const String &v) {

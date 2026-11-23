@@ -38,7 +38,7 @@ jobs:
               s = s.replace("1.80–2.60", "1.20–1.80").replace("1.80-2.60", "1.20-1.80").replace("P4-CAN-XXXX", "p4canC")
               open("dashboard_source.html", "w", encoding="utf-8").write(s)
           w = open("web_api.h", "r", encoding="utf-8").read()
-          w = re.sub(r'static void wifiApBuildDefaultSsid\(String &ssid\)\s*\{[^}]*\}', 'static void wifiApBuildDefaultSsid(String &ssid) {\n  ssid = "p4canC";\n}', w, count=1)
+          w = re.sub(r'static void wifiApBuildDefaultSsid\(String &ssid\)\s*\{.*?\n\}', 'static void wifiApBuildDefaultSsid(String &ssid) {\n  ssid = "p4canC";\n}', w, count=1, flags=re.S)
           w = w.replace('"12345678"', '"zhou950221"')
           open("web_api.h", "w", encoding="utf-8").write(w)
           m = open("mode_h_pure.h", "r", encoding="utf-8").read()

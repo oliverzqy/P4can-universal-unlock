@@ -1,0 +1,116 @@
+name: Build and Release P4-CAN Chinese Firmware
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ESP32-P4 Firmware (zh-CN · p4canC · Mode H <2.0Nm)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect sketch version
+        id: meta
+        run: |
+          INO=$(ls P4-CAN-Universal-*.ino | head -n 1)
+          SKETCH="${INO%.ino}"
+          VER="${SKETCH#P4-CAN-Universal-}"
+          echo "sketch=$SKETCH" >> "$GITHUB_OUTPUT"
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
+          echo "tag=${VER}-zh.1" >> "$GITHUB_OUTPUT"
+
+      - name: Apply custom zh-CN, p4canC and Mode H <2.0Nm patches
+        run: |
+          python3 - <<'PY'
+          import os, re, shutil
+          if os.path.exists("zh-CN/dashboard_source.zh-CN.html"):
+              shutil.copyfile("zh-CN/dashboard_source.zh-CN.html", "dashboard_source.html")
+          if os.path.exists("dashboard_source.html"):
+              s = open("dashboard_source.html", "r", encoding="utf-8").read()
+              s = s.replace("1.80–2.60", "1.20–1.80").replace("1.80-2.60", "1.20-1.80").replace("P4-CAN-XXXX", "p4canC")
+              open("dashboard_source.html", "w", encoding="utf-8").write(s)
+          w = open("web_api.h", "r", encoding="utf-8").read()
+          w = re.sub(r'static void wifiApBuildDefaultSsid\(String &ssid\)\s*\{[^}]*\}', 'static void wifiApBuildDefaultSsid(String &ssid) {\n  ssid = "p4canC";\n}', w, count=1)
+          w = w.replace('"12345678"', '"zhou950221"')
+          open("web_api.h", "w", encoding="utf-8").write(w)
+          m = open("mode_h_pure.h", "r", encoding="utf-8").read()
+          for a, b in [
+              ("MODE_H_BASE_PEAK_DEFAULT_MIN_RAW = 150u", "MODE_H_BASE_PEAK_DEFAULT_MIN_RAW = 120u"),
+              ("MODE_H_BASE_PEAK_DEFAULT_MAX_RAW = 220u", "MODE_H_BASE_PEAK_DEFAULT_MAX_RAW = 180u"),
+              ("c.base.peakMinRaw = 180u", "c.base.peakMinRaw = 120u"),
+              ("c.base.peakMaxRaw = 260u", "c.base.peakMaxRaw = 180u"),
+              ("c.ho2ThresholdRaw = 200u", "c.ho2ThresholdRaw = 160u"),
+          ]:
+              m = m.replace(a, b)
+          open("mode_h_pure.h", "w", encoding="utf-8").write(m)
+          PY
+          if [ -f tools/build_dashboard.py ]; then python3 tools/build_dashboard.py; fi
+
+      - name: Install Arduino CLI 1.6.0
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL https://downloads.arduino.cc/arduino-cli/arduino-cli_1.6.0_Linux_64bit.tar.gz -o /tmp/arduino-cli.tar.gz
+          tar -xzf /tmp/arduino-cli.tar.gz -C "$HOME/.local/bin" arduino-cli
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install ESP32 core 3.3.12
+        run: |
+          arduino-cli config init --overwrite
+          arduino-cli config add board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@3.3.12
+
+      - name: Stage Arduino sketch
+        run: |
+          SKETCH="${{ steps.meta.outputs.sketch }}"
+          mkdir -p "$RUNNER_TEMP/sketch/$SKETCH"
+          cp *.h *.ino "$RUNNER_TEMP/sketch/$SKETCH/"
+          cp *.c "$RUNNER_TEMP/sketch/$SKETCH/" 2>/dev/null || true
+          for d in src third_party automatic_shift vendor lighting; do
+            if [ -d "$d" ]; then cp -R "$d" "$RUNNER_TEMP/sketch/$SKETCH/"; fi
+          done
+
+      - name: Compile ESP32-P4 Firmware (postv3 · app5M OTA compatible)
+        run: |
+          SKETCH="${{ steps.meta.outputs.sketch }}"
+          mkdir -p dist
+          arduino-cli compile \
+            --fqbn "esp32:esp32:esp32p4:ChipVariant=postv3,FlashSize=32M,PartitionScheme=app5M_fat24M_32MB,PSRAM=enabled,USBMode=hwcdc,CDCOnBoot=cdc,FlashMode=qio" \
+            --output-dir dist "$RUNNER_TEMP/sketch/$SKETCH"
+
+      - name: Rename release assets and checksums
+        run: |
+          SKETCH="${{ steps.meta.outputs.sketch }}"
+          cd dist
+          cp "${SKETCH}.ino.bin" "${SKETCH}-zh-p4canC.OTA.bin"
+          cp "${SKETCH}.ino.merged.bin" "${SKETCH}-zh-p4canC.fullflash.bin"
+          sha256sum "${SKETCH}-zh-p4canC.OTA.bin" "${SKETCH}-zh-p4canC.fullflash.bin" > SHA256SUMS.txt
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.sketch }}-zh-p4canC
+          path: |
+            dist/${{ steps.meta.outputs.sketch }}-zh-p4canC.OTA.bin
+            dist/${{ steps.meta.outputs.sketch }}-zh-p4canC.fullflash.bin
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: "${{ steps.meta.outputs.sketch }} 官方中文定制版 (${{ steps.meta.outputs.tag }})"
+          files: |
+            dist/${{ steps.meta.outputs.sketch }}-zh-p4canC.OTA.bin
+            dist/${{ steps.meta.outputs.sketch }}-zh-p4canC.fullflash.bin
+            dist/SHA256SUMS.txt
+          fail_on_unmatched_files: true

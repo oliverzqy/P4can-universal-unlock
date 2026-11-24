@@ -25,7 +25,7 @@ jobs:
           VER="${SKETCH#P4-CAN-Universal-}"
           echo "sketch=$SKETCH" >> "$GITHUB_OUTPUT"
           echo "ver=$VER" >> "$GITHUB_OUTPUT"
-          echo "tag=${VER}-zh.1" >> "$GITHUB_OUTPUT"
+          echo "tag=${VER}-tlssc-zh.1" >> "$GITHUB_OUTPUT"
 
       - name: Apply custom zh-CN, p4canC and Mode H <2.0Nm patches
         run: |
